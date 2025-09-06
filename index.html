@@ -138,7 +138,6 @@
 
         #preview {
             max-width: 100%;
-            /* border-radius: 10px;  <-- এই লাইনটি মুছে ফেলা হয়েছে */
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
@@ -216,7 +215,7 @@
         }
 
         .dimension-input:focus {
-            outline: none;
+            outline: none; /* নীল বর্ডার বন্ধ করার জন্য এই লাইনটি যোগ করা হয়েছে */
             border-color: #e1306c;
         }
 
@@ -251,7 +250,7 @@
         }
 
         .compress-input:focus {
-            outline: none;
+            outline: none; /* নীল বর্ডার বন্ধ করার জন্য এই লাইনটি যোগ করা হয়েছে */
             border-color: #e1306c;
         }
 
@@ -504,7 +503,6 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Your existing JavaScript code here...
             const fileInput = document.getElementById('file-input');
             const uploadArea = document.getElementById('upload-area');
             const editor = document.getElementById('editor');
