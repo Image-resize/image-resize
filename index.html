@@ -138,7 +138,7 @@
 
         #preview {
             max-width: 100%;
-            border-radius: 10px;
+            /* border-radius: 10px;  <-- এই লাইনটি মুছে ফেলা হয়েছে */
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
         }
 
@@ -319,11 +319,6 @@
             justify-content: center;
         }
 
-        .ad-container p {
-            font-size: 1.1rem;
-            opacity: 0.8;
-        }
-
         .social-bar {
             display: flex;
             justify-content: center;
@@ -409,7 +404,16 @@
         </header>
         
         <div class="ad-container">
-            <p>এখানে বিজ্ঞাপনের ব্যানার যোগ করুন</p>
+            <script type="text/javascript">
+                atOptions = {
+                    'key' : '88aa77293cdd98ffe041059b6ef8613a',
+                    'format' : 'iframe',
+                    'height' : 250,
+                    'width' : 300,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.highperformanceformat.com/88aa77293cdd98ffe041059b6ef8613a/invoke.js"></script>
         </div>
         
         <div class="upload-container" id="upload-area">
@@ -474,7 +478,16 @@
         </div>
         
         <div class="ad-container">
-            <p>এখানে বিজ্ঞাপনের ব্যানার যোগ করুন</p>
+             <script type="text/javascript">
+                atOptions = {
+                    'key' : '88aa77293cdd98ffe041059b6ef8613a',
+                    'format' : 'iframe',
+                    'height' : 250,
+                    'width' : 300,
+                    'params' : {}
+                };
+            </script>
+            <script type="text/javascript" src="//www.highperformanceformat.com/88aa77293cdd98ffe041059b6ef8613a/invoke.js"></script>
         </div>
         
         <div class="social-bar">
@@ -491,6 +504,7 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Your existing JavaScript code here...
             const fileInput = document.getElementById('file-input');
             const uploadArea = document.getElementById('upload-area');
             const editor = document.getElementById('editor');
@@ -517,7 +531,6 @@
             let aspectRatio = 0;
             let currentQuality = 0.9;
             
-            // ফাইল আপলোড হ্যান্ডলিং
             fileInput.addEventListener('change', handleFileUpload);
             uploadArea.addEventListener('dragover', function(e) {
                 e.preventDefault();
@@ -699,5 +712,7 @@
             }
         });
     </script>
+
+    <script type='text/javascript' src='//pl27459006.revenuecpmgate.com/b7/63/21/b763218a911e69b86f35cf5b1eeec764.js'></script>
 </body>
 </html>
