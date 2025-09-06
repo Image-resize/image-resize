@@ -541,7 +541,7 @@
                 <div class="compress-options">
                     <h3>Compress Image</h3>
                     <div class="compress-input-container">
-                        <input type="number" id="compress-input" class="compress-input" placeholder="Size in KB (e.g., 50)">
+                        <input type="number" id="compress-input" class="compress-input" placeholder="Target Size in KB (e.g., 100)">
                         <button class="compress-btn" id="compress-btn">Compress</button>
                     </div>
                 </div>
@@ -594,27 +594,18 @@
             const compressBtn = document.getElementById('compress-btn');
             const fileInfo = document.getElementById('file-info');
             const ctx = preview.getContext('2d');
+
             let originalImage = null;
             let originalWidth = 0;
             let originalHeight = 0;
             let aspectRatio = 0;
             let currentQuality = 0.9;
+            const MIN_SIZE_KB = 50;
             
             fileInput.addEventListener('change', handleFileUpload);
-            uploadArea.addEventListener('dragover', function(e) {
+            uploadArea.addEventListener('dragover', (e) => { e.preventDefault(); });
+            uploadArea.addEventListener('drop', (e) => {
                 e.preventDefault();
-                uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.8)';
-                uploadArea.style.transform = 'translateY(-5px)';
-            });
-            uploadArea.addEventListener('dragleave', function() {
-                uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                uploadArea.style.transform = 'translateY(0)';
-            });
-            uploadArea.addEventListener('drop', function(e) {
-                e.preventDefault();
-                uploadArea.style.borderColor = 'rgba(255, 255, 255, 0.4)';
-                uploadArea.style.transform = 'translateY(0)';
-                
                 if (e.dataTransfer.files.length) {
                     fileInput.files = e.dataTransfer.files;
                     handleFileUpload();
@@ -622,26 +613,18 @@
             });
 
             widthInput.addEventListener('input', () => {
-                if (maintainRatio.checked) {
-                    const width = parseInt(widthInput.value);
-                    if (width && aspectRatio) {
-                        const height = Math.round(width / aspectRatio);
-                        heightInput.value = height;
-                    }
+                if (maintainRatio.checked && widthInput.value && aspectRatio) {
+                    heightInput.value = Math.round(parseInt(widthInput.value) / aspectRatio);
                 }
             });
 
             heightInput.addEventListener('input', () => {
-                if (maintainRatio.checked) {
-                    const height = parseInt(heightInput.value);
-                    if (height && aspectRatio) {
-                        const width = Math.round(height * aspectRatio);
-                        widthInput.value = width;
-                    }
+                if (maintainRatio.checked && heightInput.value && aspectRatio) {
+                    widthInput.value = Math.round(parseInt(heightInput.value) * aspectRatio);
                 }
             });
 
-            applyBtn.addEventListener('click', function() {
+            applyBtn.addEventListener('click', () => {
                 const newWidth = parseInt(widthInput.value);
                 const newHeight = parseInt(heightInput.value);
 
@@ -651,33 +634,40 @@
                 }
                 
                 drawImage(newWidth, newHeight);
-                updateFileInfo();
+                adjustImageSize(MIN_SIZE_KB, true); // Auto-adjust to minimum size
             });
 
-            compressBtn.addEventListener('click', compressImageToSize);
+            compressBtn.addEventListener('click', () => {
+                const targetSizeKB = parseInt(compressInput.value);
+                if (!targetSizeKB || targetSizeKB < 5) {
+                    alert('Please enter a valid target size greater than 5 KB.');
+                    return;
+                }
+                adjustImageSize(targetSizeKB);
+            });
 
-            resetBtn.addEventListener('click', function() {
+            resetBtn.addEventListener('click', () => {
                 if (originalImage) {
                     widthInput.value = originalWidth;
                     heightInput.value = originalHeight;
-                    currentQuality = 0.9;
                     drawImage(originalWidth, originalHeight);
-                    updateFileInfo();
+                    adjustImageSize(MIN_SIZE_KB, true); // Auto-adjust to minimum size
                 }
             });
+
             downloadBtn.addEventListener('click', downloadImage);
 
-            function handleFileUpload(e) {
+            function handleFileUpload() {
                 const file = fileInput.files[0];
-                if (!file || !file.type.match('image.*')) {
+                if (!file || !file.type.startsWith('image/')) {
                     alert('Please select a valid image file.');
                     return;
                 }
                 
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = (e) => {
                     originalImage = new Image();
-                    originalImage.onload = function() {
+                    originalImage.onload = () => {
                         originalWidth = originalImage.width;
                         originalHeight = originalImage.height;
                         aspectRatio = originalWidth / originalHeight;
@@ -686,7 +676,7 @@
                         heightInput.value = originalHeight;
                         
                         drawImage(originalWidth, originalHeight);
-                        updateFileInfo();
+                        adjustImageSize(MIN_SIZE_KB, true); // Auto-adjust to minimum size on load
                         
                         editor.style.display = 'block';
                     };
@@ -707,41 +697,77 @@
                 const fileSize = Math.round((dataURL.length * 3/4) / 1024);
                 fileInfo.textContent = `Current Size: ${preview.width}x${preview.height}px | File Size: ~${fileSize} KB`;
             }
-            
-            function compressImageToSize() {
+
+            function adjustImageSize(targetSizeKB, forceIncrease = false) {
                 if (!originalImage) return;
-                const targetSizeKB = parseInt(compressInput.value);
-                if (!targetSizeKB || targetSizeKB < 5) {
-                    alert('Please enter a valid size greater than 5 KB.');
-                    return;
-                }
 
                 let minQuality = 0;
                 let maxQuality = 1;
-                let quality = 0.9;
+                let quality = currentQuality; 
+                let currentSizeKB = (preview.toDataURL('image/jpeg', quality).length * 3/4) / 1024;
+                
+                // If we must increase size and it's already big enough, do nothing.
+                if (forceIncrease && currentSizeKB >= targetSizeKB) {
+                    updateFileInfo();
+                    return;
+                }
 
-                for (let i = 0; i < 10; i++) { // 10 iterations for fast result
+                for (let i = 0; i < 10; i++) {
                     quality = (minQuality + maxQuality) / 2;
                     const dataURL = preview.toDataURL('image/jpeg', quality);
-                    const fileSizeKB = (dataURL.length * 3/4) / 1024;
+                    currentSizeKB = (dataURL.length * 3/4) / 1024;
 
-                    if (Math.abs(fileSizeKB - targetSizeKB) < 5) { // Tolerance of 5KB
-                        break;
-                    }
+                    if (Math.abs(currentSizeKB - targetSizeKB) < 5) break; // Tolerance of 5KB
 
-                    if (fileSizeKB > targetSizeKB) {
+                    if (currentSizeKB > targetSizeKB) {
                         maxQuality = quality;
                     } else {
                         minQuality = quality;
                     }
                 }
-                
                 currentQuality = quality;
                 updateFileInfo();
             }
-            
+
+            function canShowAd() {
+                const AD_LIMIT = 5;
+                const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+                
+                try {
+                    const adStats = JSON.parse(localStorage.getItem('adCounter')) || { date: today, count: 0 };
+                    
+                    if (adStats.date !== today) {
+                        // It's a new day, reset counter
+                        adStats.date = today;
+                        adStats.count = 1;
+                        localStorage.setItem('adCounter', JSON.stringify(adStats));
+                        return true;
+                    }
+
+                    if (adStats.count < AD_LIMIT) {
+                        adStats.count++;
+                        localStorage.setItem('adCounter', JSON.stringify(adStats));
+                        return true;
+                    }
+                } catch (error) {
+                    // Handle potential localStorage errors
+                    console.error("Could not access localStorage:", error);
+                    // Decide if you want to show the ad anyway if localStorage fails
+                    return true; 
+                }
+                
+                return false; // Limit reached for today
+            }
+
             function downloadImage() {
                 if (!originalImage) return;
+
+                // 1. Handle Ad
+                if (canShowAd()) {
+                    window.open('https://www.revenuecpmgate.com/y4q8yr1w?key=a8e5c1b0e8f18850a4534feaed2c8063', '_blank');
+                }
+
+                // 2. Handle Image Download
                 const link = document.createElement('a');
                 link.download = 'resized_image.jpg';
                 link.href = preview.toDataURL('image/jpeg', currentQuality);
